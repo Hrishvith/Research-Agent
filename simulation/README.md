@@ -55,11 +55,11 @@ This interactive demo showcases the user experience and visual workflow of a mul
 ### 🚀 Quickest Method - Run Directly from GitHub
 **No installation needed!** Click here to run the simulation:
 
-👉 **[Open AI Research Pipeline Simulation](https://raw.githack.com/Hrishvith/Research-Agent/main/workflow.html)**
+👉 **[Open AI Research Pipeline Simulation](https://raw.githack.com/Hrishvith/Research-Agent/main/simulation/workflow.html)**
 
 Or use any browser with this link:
 ```
-https://raw.githack.com/Hrishvith/Research-Agent/main/workflow.html
+https://raw.githack.com/Hrishvith/Research-Agent/main/simulation/workflow.html
 ```
 
 ### Local Methods:
