@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vision · AI Research Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #050810;
+  --bg2: #090d1a;
+  --bg3: #0d1224;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --border: rgba(99,120,255,0.15);
+  --border2: rgba(99,120,255,0.3);
+  --purple: #6378ff;
+  --purple2: #8b9fff;
+  --teal: #00e5c4;
+  --teal2: #00c4a8;
+  --amber: #ffb347;
+  --coral: #ff6b6b;
+  --text: #e8ecff;
+  --muted: #6b7a9e;
+  --faint: #2a3350;
+  --mono: 'Space Mono', monospace;
+  --display: 'Syne', sans-serif;
+  --glow-purple: 0 0 30px rgba(99,120,255,0.35);
+  --glow-teal: 0 0 30px rgba(0,229,196,0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── STARFIELD BG ── */
+.starfield {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.star {
+  position: absolute; border-radius: 50%; background: #fff;
+  animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
+}
+@keyframes twinkle { 0%,100%{opacity:.1} 50%{opacity:.6} }
+
+/* ── GRID OVERLAY ── */
+.grid-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(99,120,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,120,255,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── LAYOUT ── */
+.app {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto;
+  padding: 40px 28px 80px;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 52px; gap: 20px; flex-wrap: wrap;
+}
+.header-left {}
+.eyebrow {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .25em;
+  color: var(--teal); text-transform: uppercase; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.eyebrow::before {
+  content: ''; display: block; width: 28px; height: 1px; background: var(--teal);
+}
+.title {
+  font-family: var(--display); font-size: clamp(38px, 6vw, 64px);
+  font-weight: 800; line-height: 1; letter-spacing: -.03em; color: var(--text);
+  margin-bottom: 8px;
+}
+.title .accent { color: var(--purple); }
+.title .accent2 { color: var(--teal); }
+.subtitle {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  line-height: 1.7; max-width: 380px;
+}
+.header-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+}
+.team-badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  color: var(--purple2); border: 1px solid var(--border2); padding: 6px 14px;
+  border-radius: 2px; text-transform: uppercase; background: rgba(99,120,255,.06);
+}
+.track-badge {
+  font-size: 10px; color: var(--muted); letter-spacing: .08em;
+  text-transform: uppercase; border: 1px solid var(--faint); padding: 5px 12px;
+  border-radius: 2px;
+}
+.live-dot {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; color: var(--teal); letter-spacing: .1em; text-transform: uppercase;
+}
+.live-dot::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--teal);
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ── QUERY INPUT ── */
+.query-section { margin-bottom: 48px; }
+.query-label {
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px;
+}
+.query-row {
+  display: flex; gap: 0; border: 1px solid var(--border2);
+  border-radius: 4px; overflow: hidden;
+  background: var(--surface); transition: border-color .2s, box-shadow .2s;
+}
+.query-row:focus-within {
+  border-color: var(--purple); box-shadow: var(--glow-purple);
+}
+.query-prefix {
+  padding: 0 14px; display: flex; align-items: center;
+  color: var(--purple); font-size: 13px; border-right: 1px solid var(--border);
+  background: rgba(99,120,255,.06); white-space: nowrap;
+}
+.query-input {
+  flex: 1; padding: 14px 18px; background: transparent;
+  border: none; outline: none; color: var(--text); font-family: var(--mono);
+  font-size: 13px; caret-color: var(--teal);
+}
+.query-input::placeholder { color: var(--muted); }
+.run-btn {
+  padding: 0 28px; background: var(--purple); border: none; cursor: pointer;
+  color: #fff; font-family: var(--display); font-size: 12px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; transition: background .15s, box-shadow .15s;
+  white-space: nowrap;
+}
+.run-btn:hover { background: var(--purple2); box-shadow: var(--glow-purple); }
+.run-btn:disabled {
+  background: var(--faint); color: var(--muted); cursor: not-allowed; box-shadow: none;
+}
+
+.presets-row {
+  display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+}
+.preset {
+  font-size: 10px; padding: 5px 12px; border: 1px solid var(--faint);
+  color: var(--muted); background: transparent; cursor: pointer; border-radius: 2px;
+  font-family: var(--mono); letter-spacing: .04em; transition: all .15s;
+}
+.preset:hover {
+  border-color: var(--purple); color: var(--purple); background: rgba(99,120,255,.07);
+}
+
+/* ── PIPELINE STAGES ── */
+.pipeline-section { margin-bottom: 48px; }
+.section-label {
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 18px; display: flex; align-items: center; gap: 12px;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--faint);
+}
+
+.stages-container {
+  display: grid; grid-template-columns: 1fr 32px 1fr 32px 1fr 32px 1fr 32px 1fr;
+  align-items: center; gap: 0;
+}
+@media (max-width: 700px) {
+  .stages-container { grid-template-columns: 1fr; }
+  .arrow-col { display: none; }
+}
+
+.stage-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 18px 16px; position: relative; overflow: hidden;
+  cursor: pointer; transition: border-color .3s, box-shadow .3s, transform .2s;
+  min-height: 130px;
+}
+.stage-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--stage-color, var(--purple)); transform: scaleX(0); transform-origin: left;
+  transition: transform .6s cubic-bezier(.4,0,.2,1);
+}
+.stage-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+.stage-card.active {
+  border-color: var(--stage-color, var(--purple));
+  box-shadow: 0 0 24px rgba(99,120,255,.25), inset 0 0 24px rgba(99,120,255,.04);
+}
+.stage-card.active::before { transform: scaleX(1); }
+.stage-card.done {
+  border-color: rgba(0,229,196,.3);
+  box-shadow: 0 0 16px rgba(0,229,196,.12);
+}
+.stage-card.done::before { transform: scaleX(1); background: var(--teal); }
+
+.stage-num {
+  font-size: 9px; letter-spacing: .18em; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.stage-icon-wrap {
+  width: 36px; height: 36px; border-radius: 6px; display: flex;
+  align-items: center; justify-content: center; margin-bottom: 10px;
+  background: rgba(99,120,255,.1); border: 1px solid rgba(99,120,255,.2);
+  font-size: 17px; transition: background .3s;
+}
+.stage-card.active .stage-icon-wrap { background: rgba(99,120,255,.2); }
+.stage-card.done .stage-icon-wrap {
+  background: rgba(0,229,196,.12); border-color: rgba(0,229,196,.25);
+}
+.stage-name {
+  font-family: var(--display); font-size: 13px; font-weight: 700;
+  color: var(--text); margin-bottom: 4px; line-height: 1.2;
+}
+.stage-tech {
+  font-size: 9px; color: var(--muted); letter-spacing: .06em;
+  line-height: 1.6; text-transform: uppercase;
+}
+.stage-progress-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: rgba(99,120,255,.1);
+}
+.stage-progress-fill {
+  height: 100%; width: 0%; background: var(--stage-color, var(--purple));
+  transition: width .5s linear;
+}
+.stage-card.done .stage-progress-fill { width: 100% !important; background: var(--teal); }
+.stage-check {
+  position: absolute; top: 10px; right: 12px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--teal); display: none;
+  align-items: center; justify-content: center;
+}
+.stage-check::after { content: '✓'; font-size: 10px; color: var(--bg); font-weight: 700; }
+.stage-card.done .stage-check { display: flex; }
+
+.arrow-col {
+  display: flex; align-items: center; justify-content: center;
+}
+.pipeline-arrow {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.arrow-line {
+  width: 20px; height: 1px; background: var(--border2);
+  transition: background .3s;
+}
+.arrow-head {
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-left: 6px solid var(--border2); margin-left: 2px;
+  transition: border-left-color .3s;
+}
+.arrow-active .arrow-line { background: var(--teal); }
+.arrow-active .arrow-head { border-left-color: var(--teal); }
+
+/* ── AGENT GRID ── */
+.agents-section { margin-bottom: 48px; }
+.agent-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+@media (max-width: 650px) { .agent-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.agent-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px; cursor: pointer;
+  transition: border-color .25s, transform .2s, box-shadow .25s;
+  position: relative; overflow: hidden;
+}
+.agent-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, var(--agent-glow, rgba(99,120,255,.1)) 0%, transparent 70%);
+  opacity: 0; transition: opacity .3s;
+}
+.agent-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+.agent-card.firing {
+  border-color: var(--purple); box-shadow: 0 0 20px rgba(99,120,255,.25);
+}
+.agent-card.firing::after { opacity: 1; }
+.agent-card.done-agent { border-color: rgba(0,229,196,.3); }
+.agent-card.done-agent::after { opacity: 0; }
+
+.agent-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.agent-id {
+  font-size: 9px; letter-spacing: .18em; color: var(--muted); text-transform: uppercase;
+}
+.agent-pulse {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--faint);
+  transition: background .2s;
+}
+.agent-card.firing .agent-pulse {
+  background: var(--purple); animation: agent-blink .7s ease-in-out infinite;
+}
+.agent-card.done-agent .agent-pulse { background: var(--teal); animation: none; }
+@keyframes agent-blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
+
+.agent-icon {
+  font-size: 22px; margin-bottom: 8px; display: block;
+}
+.agent-name {
+  font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px;
+}
+.agent-role { font-size: 10px; color: var(--muted); line-height: 1.5; }
+.agent-tools {
+  margin-top: 10px; display: flex; gap: 4px; flex-wrap: wrap;
+}
+.tool-pill {
+  font-size: 9px; padding: 2px 7px; border-radius: 2px;
+  background: rgba(99,120,255,.1); color: var(--purple2); border: 1px solid rgba(99,120,255,.2);
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.agent-card.done-agent .tool-pill {
+  background: rgba(0,229,196,.08); color: var(--teal); border-color: rgba(0,229,196,.2);
+}
+
+/* ── DATA FLOW VISUAL ── */
+.flow-section { margin-bottom: 48px; }
+.flow-canvas-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 24px; overflow: hidden; position: relative;
+}
+.flow-title {
+  font-size: 10px; letter-spacing: .18em; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 20px;
+}
+
+canvas#flow-canvas {
+  width: 100%; display: block; border-radius: 4px;
+}
+
+/* ── LOG PANEL ── */
+.log-section { margin-bottom: 48px; }
+.log-panel {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px; height: 200px; overflow-y: auto; padding: 16px;
+  scroll-behavior: smooth;
+}
+.log-panel::-webkit-scrollbar { width: 4px; }
+.log-panel::-webkit-scrollbar-track { background: transparent; }
+.log-panel::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 2px; }
+.log-line {
+  display: grid; grid-template-columns: 50px 90px 1fr;
+  gap: 12px; font-size: 11px; line-height: 1.9; opacity: 0;
+  animation: logfade .3s forwards;
+}
+@keyframes logfade { to { opacity: 1; } }
+.log-ts { color: var(--faint); font-variant-numeric: tabular-nums; }
+.log-agent-name { font-weight: 700; }
+.log-agent-name.retrieval { color: var(--purple2); }
+.log-agent-name.analysis { color: #82b4ff; }
+.log-agent-name.kg { color: var(--teal); }
+.log-agent-name.synthesis { color: var(--amber); }
+.log-agent-name.system { color: var(--muted); }
+.log-text { color: var(--muted); }
+.log-text.success { color: var(--teal); }
+.log-text.warn { color: var(--amber); }
+.log-text.info { color: #82b4ff; }
+.log-text.error { color: var(--coral); }
+
+/* ── OUTPUT RESULTS ── */
+.output-section { display: none; }
+.output-section.visible { display: block; margin-bottom: 48px; }
+.output-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.output-title { font-family: var(--display); font-size: 18px; font-weight: 700; }
+.output-stats {
+  display: flex; gap: 10px;
+}
+.out-stat {
+  font-size: 10px; padding: 5px 12px; border-radius: 2px;
+  background: rgba(0,229,196,.08); border: 1px solid rgba(0,229,196,.2);
+  color: var(--teal); letter-spacing: .06em; text-transform: uppercase;
+}
+
+.papers-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
+.paper-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px 18px; display: flex; gap: 16px;
+  align-items: flex-start; transition: border-color .2s;
+  animation: slideUp .4s ease forwards; opacity: 0;
+}
+.paper-card:nth-child(2) { animation-delay: .08s; }
+.paper-card:nth-child(3) { animation-delay: .16s; }
+@keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.paper-card:hover { border-color: var(--border2); }
+.paper-rank {
+  font-family: var(--display); font-size: 28px; font-weight: 800;
+  color: var(--faint); flex-shrink: 0; line-height: 1; padding-top: 2px;
+  min-width: 28px;
+}
+.paper-body { flex: 1; }
+.paper-title-text {
+  font-family: var(--display); font-size: 14px; font-weight: 700;
+  color: var(--text); margin-bottom: 5px; line-height: 1.3;
+}
+.paper-meta { font-size: 10px; color: var(--muted); margin-bottom: 8px; line-height: 1.7; }
+.paper-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.ptag {
+  font-size: 9px; padding: 2px 8px; border-radius: 2px;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.ptag.p { background: rgba(99,120,255,.12); color: var(--purple2); border: 1px solid rgba(99,120,255,.2); }
+.ptag.t { background: rgba(0,229,196,.08); color: var(--teal); border: 1px solid rgba(0,229,196,.2); }
+.ptag.a { background: rgba(255,179,71,.08); color: var(--amber); border: 1px solid rgba(255,179,71,.2); }
+.cite-badge {
+  font-size: 10px; color: var(--muted); align-self: flex-start;
+  flex-shrink: 0; text-align: right; padding-top: 3px;
+}
+.cite-num { font-family: var(--display); font-size: 18px; font-weight: 800; color: var(--purple2); display: block; }
+
+.metrics-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.metric-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 18px; text-align: center;
+  animation: slideUp .4s ease .24s forwards; opacity: 0;
+}
+.metric-val { font-family: var(--display); font-size: 32px; font-weight: 800; color: var(--teal); }
+.metric-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; margin-top: 4px; }
+
+/* ── FOOTER ── */
+.footer {
+  border-top: 1px solid var(--faint); padding-top: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.footer-text { font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.reset-btn {
+  font-size: 10px; padding: 7px 18px; border: 1px solid var(--faint);
+  color: var(--muted); background: transparent; cursor: pointer;
+  font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  transition: all .15s; border-radius: 2px;
+}
+.reset-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+/* ── SCANLINE EFFECT ── */
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.04) 2px, rgba(0,0,0,.04) 4px);
+}
+</style>
+</head>
+<body>
+
+<div class="starfield" id="starfield"></div>
+<div class="grid-overlay"></div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="eyebrow">Multi-Agent Research Pipeline</div>
+      <h1 class="title">Vision<span class="accent"></span><span class="accent2"></span></h1>
+      <p class="subtitle">AI Research Assistant — automated literature discovery, knowledge graph construction, and insight synthesis.</p>
+    </div>
+    <div class="header-right">
+      <div class="team-badge">Team Vision</div>
+      <div class="track-badge">AIML Track · Agent</div>
+      <div class="live-dot">Pipeline Active</div>
+    </div>
+  </header>
+
+  <!-- QUERY -->
+  <section class="query-section">
+    <div class="query-label">// Research Query</div>
+    <div class="query-row">
+      <span class="query-prefix">$ query →</span>
+      <input class="query-input" type="text" id="q-input" placeholder="Enter research topic..." value="Multi-agent reinforcement learning survey"/>
+      <button class="run-btn" id="run-btn" onclick="startPipeline()">Execute</button>
+    </div>
+    <div class="presets-row">
+      <button class="preset" onclick="setQ('Multi-agent reinforcement learning survey')">MARL Survey</button>
+      <button class="preset" onclick="setQ('Transformer attention mechanisms')">Transformer Attention</button>
+      <button class="preset" onclick="setQ('Graph neural networks for drug discovery')">GNN Drug Discovery</button>
+      <button class="preset" onclick="setQ('LLM reasoning and chain-of-thought')">LLM Reasoning</button>
+    </div>
+  </section>
+
+  <!-- PIPELINE STAGES -->
+  <section class="pipeline-section">
+    <div class="section-label">Pipeline Stages</div>
+    <div class="stages-container" id="stages-container">
+
+      <div class="stage-card" id="sn-0" style="--stage-color:#6378ff"
+        onclick="stageClick(0,'How does the Literature Fetch stage work in HACHTON?')">
+        <div class="stage-num">Stage 01</div>
+        <div class="stage-icon-wrap">📡</div>
+        <div class="stage-name">Literature Fetch</div>
+        <div class="stage-tech">ArXiv · Semantic Scholar · PDF Download</div>
+        <div class="stage-progress-bar"><div class="stage-progress-fill" id="sp-0"></div></div>
+        <div class="stage-check"></div>
+      </div>
+
+      <div class="arrow-col"><div class="pipeline-arrow" id="arr-0">
+        <div class="arrow-line"></div><div class="arrow-head"></div>
+      </div></div>
+
+      <div class="stage-card" id="sn-1" style="--stage-color:#82b4ff"
+        onclick="stageClick(1,'How does the Semantic Parsing stage extract meaning from papers?')">
+        <div class="stage-num">Stage 02</div>
+        <div class="stage-icon-wrap">🧠</div>
+        <div class="stage-name">Semantic Parse</div>
+        <div class="stage-tech">LangGraph · LLM APIs · Chunking</div>
+        <div class="stage-progress-bar"><div class="stage-progress-fill" id="sp-1"></div></div>
+        <div class="stage-check"></div>
+      </div>
+
+      <div class="arrow-col"><div class="pipeline-arrow" id="arr-1">
+        <div class="arrow-line"></div><div class="arrow-head"></div>
+      </div></div>
+
+      <div class="stage-card" id="sn-2" style="--stage-color:#00e5c4"
+        onclick="stageClick(2,'How does the Knowledge Graph stage build the entity graph in Neo4j?')">
+        <div class="stage-num">Stage 03</div>
+        <div class="stage-icon-wrap">🕸️</div>
+        <div class="stage-name">Knowledge Graph</div>
+        <div class="stage-tech">Neo4j · Entity Linking · Graph DB</div>
+        <div class="stage-progress-bar"><div class="stage-progress-fill" id="sp-2"></div></div>
+        <div class="stage-check"></div>
+      </div>
+
+      <div class="arrow-col"><div class="pipeline-arrow" id="arr-2">
+        <div class="arrow-line"></div><div class="arrow-head"></div>
+      </div></div>
+
+      <div class="stage-card" id="sn-3" style="--stage-color:#ffb347"
+        onclick="stageClick(3,'How does the Insight Synthesis stage detect contradictions?')">
+        <div class="stage-num">Stage 04</div>
+        <div class="stage-icon-wrap">⚡</div>
+        <div class="stage-name">Insight Synthesis</div>
+        <div class="stage-tech">Contradiction Detect · Citation Rank</div>
+        <div class="stage-progress-bar"><div class="stage-progress-fill" id="sp-3"></div></div>
+        <div class="stage-check"></div>
+      </div>
+
+      <div class="arrow-col"><div class="pipeline-arrow" id="arr-3">
+        <div class="arrow-line"></div><div class="arrow-head"></div>
+      </div></div>
+
+      <div class="stage-card" id="sn-4" style="--stage-color:#ff6b6b"
+        onclick="stageClick(4,'How does the Report Generation stage produce the final output?')">
+        <div class="stage-num">Stage 05</div>
+        <div class="stage-icon-wrap">📋</div>
+        <div class="stage-name">Report Gen</div>
+        <div class="stage-tech">FastAPI · Next.js · TypeScript</div>
+        <div class="stage-progress-bar"><div class="stage-progress-fill" id="sp-4"></div></div>
+        <div class="stage-check"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- AGENTS -->
+  <section class="agents-section">
+    <div class="section-label">4-Agent Synergistic Pipeline</div>
+    <div class="agent-grid">
+
+      <div class="agent-card" id="ag-0" style="--agent-glow:rgba(99,120,255,.15)"
+        onclick="agentClick('How does the Retrieval Agent search ArXiv and ChromaDB?')">
+        <div class="agent-top">
+          <span class="agent-id">Agent · 01</span>
+          <span class="agent-pulse" id="ad-0"></span>
+        </div>
+        <span class="agent-icon">🔍</span>
+        <div class="agent-name">Retrieval Agent</div>
+        <div class="agent-role">Fetches papers from academic APIs. Filters by semantic similarity.</div>
+        <div class="agent-tools">
+          <span class="tool-pill">LangGraph</span>
+          <span class="tool-pill">ChromaDB</span>
+          <span class="tool-pill">ArXiv API</span>
+        </div>
+      </div>
+
+      <div class="agent-card" id="ag-1" style="--agent-glow:rgba(130,180,255,.15)"
+        onclick="agentClick('How does the Analysis Agent extract methodology and results from papers?')">
+        <div class="agent-top">
+          <span class="agent-id">Agent · 02</span>
+          <span class="agent-pulse" id="ad-1"></span>
+        </div>
+        <span class="agent-icon">🔬</span>
+        <div class="agent-name">Analysis Agent</div>
+        <div class="agent-role">Deep reads paper content. Extracts methodology, results, limitations.</div>
+        <div class="agent-tools">
+          <span class="tool-pill">LLM APIs</span>
+          <span class="tool-pill">FastAPI</span>
+        </div>
+      </div>
+
+      <div class="agent-card" id="ag-2" style="--agent-glow:rgba(0,229,196,.12)"
+        onclick="agentClick('How does the KG Agent build nodes and edges in Neo4j?')">
+        <div class="agent-top">
+          <span class="agent-id">Agent · 03</span>
+          <span class="agent-pulse" id="ad-2"></span>
+        </div>
+        <span class="agent-icon">🕸️</span>
+        <div class="agent-name">KG Agent</div>
+        <div class="agent-role">Builds knowledge graph. Links authors, methods, datasets in Neo4j.</div>
+        <div class="agent-tools">
+          <span class="tool-pill">Neo4j</span>
+          <span class="tool-pill">Graph DB</span>
+        </div>
+      </div>
+
+      <div class="agent-card" id="ag-3" style="--agent-glow:rgba(255,179,71,.12)"
+        onclick="agentClick('How does the Synthesis Agent resolve contradictions and rank insights?')">
+        <div class="agent-top">
+          <span class="agent-id">Agent · 04</span>
+          <span class="agent-pulse" id="ad-3"></span>
+        </div>
+        <span class="agent-icon">✨</span>
+        <div class="agent-name">Synthesis Agent</div>
+        <div class="agent-role">Detects contradictions. Ranks insights. Generates final report.</div>
+        <div class="agent-tools">
+          <span class="tool-pill">LangGraph</span>
+          <span class="tool-pill">LLM APIs</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DATA FLOW CANVAS -->
+  <section class="flow-section">
+    <div class="section-label">Data Intelligence Layer — Dual Engine</div>
+    <div class="flow-canvas-wrap">
+      <div class="flow-title">// Live data flow visualization</div>
+      <canvas id="flow-canvas" height="180"></canvas>
+    </div>
+  </section>
+
+  <!-- LOG PANEL -->
+  <section class="log-section">
+    <div class="section-label">Agent Log Stream</div>
+    <div class="log-panel" id="log-panel">
+      <div class="log-line">
+        <span class="log-ts">00:00</span>
+        <span class="log-agent-name system">SYSTEM</span>
+        <span class="log-text info">Pipeline initialized. Awaiting query input.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- OUTPUT -->
+  <section class="output-section" id="output-section">
+    <div class="section-label">Research Output</div>
+    <div class="output-header">
+      <span class="output-title">Synthesized Results</span>
+      <div class="output-stats">
+        <span class="out-stat" id="out-stat-papers">0 papers</span>
+        <span class="out-stat" id="out-stat-time">0.0s</span>
+      </div>
+    </div>
+    <div class="papers-grid" id="papers-grid"></div>
+    <div class="metrics-row">
+      <div class="metric-box">
+        <div class="metric-val" id="met-papers">0</div>
+        <div class="metric-lbl">Papers Indexed</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="met-entities">0</div>
+        <div class="metric-lbl">KG Entities</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="met-time">0s</div>
+        <div class="metric-lbl">Pipeline Time</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span class="footer-text">HACHTON · AI Research Assistant · Python (Backend) · TypeScript (Frontend) · LangGraph · Neo4j · FastAPI</span>
+    <button class="reset-btn" onclick="resetPipeline()">↺ Reset</button>
+  </footer>
+
+</div>
+
+<script>
+/* ── STARFIELD ── */
+(function(){
+  const sf = document.getElementById('starfield');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:-${Math.random()*5}s;`;
+    sf.appendChild(s);
+  }
+})();
+
+/* ── FLOW CANVAS ── */
+const canvas = document.getElementById('flow-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let animId = null;
+let flowActive = false;
+
+function resizeCanvas(){
+  canvas.width = canvas.offsetWidth * devicePixelRatio;
+  canvas.height = 180 * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const NODES = [
+  {x:.08, y:.5, label:'ArXiv', color:'#6378ff'},
+  {x:.25, y:.25, label:'Retrieval', color:'#8b9fff'},
+  {x:.25, y:.75, label:'ChromaDB', color:'#6378ff'},
+  {x:.45, y:.5, label:'LangGraph', color:'#00e5c4'},
+  {x:.65, y:.28, label:'Neo4j', color:'#00e5c4'},
+  {x:.65, y:.72, label:'LLM APIs', color:'#ffb347'},
+  {x:.85, y:.5, label:'FastAPI', color:'#ff6b6b'},
+];
+const EDGES = [[0,1],[0,2],[1,3],[2,3],[3,4],[3,5],[4,6],[5,6]];
+
+function nx(x){ return x * (canvas.offsetWidth||600); }
+function ny(y){ return y * 180; }
+
+function spawnParticle(){
+  const edge = EDGES[Math.floor(Math.random()*EDGES.length)];
+  const src = NODES[edge[0]], dst = NODES[edge[1]];
+  particles.push({
+    sx:nx(src.x),sy:ny(src.y),ex:nx(dst.x),ey:ny(dst.y),
+    t:0,speed:.012+Math.random()*.01,
+    color:src.color,size:2+Math.random()*1.5,
+  });
+}
+
+function drawFlow(){
+  const w = canvas.offsetWidth||600;
+  ctx.clearRect(0,0,w,180);
+
+  // Edges
+  EDGES.forEach(([a,b])=>{
+    const s=NODES[a],d=NODES[b];
+    ctx.beginPath();
+    ctx.moveTo(nx(s.x),ny(s.y));
+    ctx.lineTo(nx(d.x),ny(d.y));
+    ctx.strokeStyle='rgba(99,120,255,0.12)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  });
+
+  // Nodes
+  NODES.forEach(n=>{
+    const x=nx(n.x),y=ny(n.y);
+    ctx.beginPath();
+    ctx.arc(x,y,6,0,Math.PI*2);
+    ctx.fillStyle=n.color+'33';
+    ctx.fill();
+    ctx.strokeStyle=n.color;
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+
+    ctx.fillStyle=n.color;
+    ctx.font=`10px 'Space Mono', monospace`;
+    ctx.textAlign='center';
+    ctx.fillText(n.label,x,y-12);
+  });
+
+  // Particles
+  particles.forEach((p,i)=>{
+    p.t = Math.min(p.t+p.speed,1);
+    const x=p.sx+(p.ex-p.sx)*p.t;
+    const y=p.sy+(p.ey-p.sy)*p.t;
+    ctx.beginPath();
+    ctx.arc(x,y,p.size,0,Math.PI*2);
+    ctx.fillStyle=p.color+'cc';
+    ctx.shadowColor=p.color;
+    ctx.shadowBlur=8;
+    ctx.fill();
+    ctx.shadowBlur=0;
+    if(p.t>=1) particles.splice(i,1);
+  });
+
+  if(flowActive && Math.random()<.18) spawnParticle();
+  animId=requestAnimationFrame(drawFlow);
+}
+drawFlow();
+
+/* ── DATA ── */
+const PAPERS = {
+  'Multi-agent reinforcement learning survey':[
+    {title:'Cooperative Multi-Agent Policy Gradient',authors:'Lowe, Wu, Tamar et al.',year:'2023',venue:'NeurIPS',tags:['MARL','cooperative','RL'],cite:482,tc:'p'},
+    {title:'QMIX: Monotonic Value Function Factorisation for MARL',authors:'Rashid, Samvelyan et al.',year:'2022',venue:'ICML',tags:['Q-learning','factorisation'],cite:1204,tc:'t'},
+    {title:'Communication in Multi-Agent Reinforcement Learning',authors:'Sukhbaatar, Fergus et al.',year:'2023',venue:'ICLR',tags:['communication','emergent'],cite:637,tc:'a'},
+  ],
+  'Transformer attention mechanisms':[
+    {title:'Attention Is All You Need',authors:'Vaswani, Shazeer, Parmar et al.',year:'2017',venue:'NeurIPS',tags:['transformer','self-attention'],cite:58000,tc:'p'},
+    {title:'FlashAttention: Fast Memory-Efficient Exact Attention',authors:'Dao, Fu, Ermon et al.',year:'2022',venue:'NeurIPS',tags:['efficiency','IO-aware'],cite:2100,tc:'t'},
+    {title:'Sparse Transformers for Extremely Long Sequences',authors:'Child, Gray, Radford et al.',year:'2023',venue:'arXiv',tags:['sparse','scalable'],cite:889,tc:'a'},
+  ],
+  'Graph neural networks for drug discovery':[
+    {title:'Neural Message Passing for Quantum Chemistry',authors:'Gilmer, Schütt et al.',year:'2022',venue:'ICML',tags:['GNN','molecular'],cite:3200,tc:'p'},
+    {title:'MolBERT: Molecular Graph Transformer for Drug Properties',authors:'Li, Xiong et al.',year:'2023',venue:'Nature Comp.',tags:['drug','transformer'],cite:740,tc:'t'},
+    {title:'Artificial Intelligence in Drug Discovery',authors:'Stokes, Yang et al.',year:'2023',venue:'Cell',tags:['biology','deep learning'],cite:1860,tc:'a'},
+  ],
+  'LLM reasoning and chain-of-thought':[
+    {title:'Chain-of-Thought Prompting Elicits Reasoning in LLMs',authors:'Wei, Wang, Schuurmans et al.',year:'2022',venue:'NeurIPS',tags:['CoT','prompting'],cite:6700,tc:'p'},
+    {title:'Tree of Thoughts: Deliberate Problem Solving with LLMs',authors:'Yao, Yu, Zhao et al.',year:'2023',venue:'NeurIPS',tags:['reasoning','planning'],cite:1900,tc:'t'},
+    {title:'Self-Consistency Improves Chain-of-Thought Reasoning',authors:'Wang, Wei, Schuurmans et al.',year:'2023',venue:'ICLR',tags:['self-consistency'],cite:2340,tc:'a'},
+  ],
+};
+
+const LOG_SEQUENCES = [
+  [{agent:'RETRIEVAL',cls:'retrieval',msg:'Scanning ArXiv API — query embedding dispatched...',type:'info'},
+   {agent:'RETRIEVAL',cls:'retrieval',msg:'Querying Semantic Scholar vector space...'},
+   {agent:'RETRIEVAL',cls:'retrieval',msg:'Found 247 candidate abstracts. Ranking by relevance score...'},
+   {agent:'RETRIEVAL',cls:'retrieval',msg:'Top-3 papers confirmed. Initiating PDF download pipeline.',type:'success'}],
+  [{agent:'ANALYSIS',cls:'analysis',msg:'Chunking papers into 512-token semantic segments...',type:'info'},
+   {agent:'ANALYSIS',cls:'analysis',msg:'LLM pass: extracting methodology, results, limitations...'},
+   {agent:'KG',cls:'kg',msg:'Entity recognition: authors, methods, datasets identified...',type:'info'},
+   {agent:'KG',cls:'kg',msg:'Cross-paper entity linking via co-citation graph...'}],
+  [{agent:'KG',cls:'kg',msg:'Neo4j write — 128 nodes, 341 edges constructed.',type:'success'},
+   {agent:'KG',cls:'kg',msg:'Running contradiction detector across claim pairs...',type:'warn'},
+   {agent:'SYNTHESIS',cls:'synthesis',msg:'⚠ 2 conflicting benchmark results detected across papers.',type:'warn'},
+   {agent:'SYNTHESIS',cls:'synthesis',msg:'Resolving via citation-weight scoring algorithm...'}],
+  [{agent:'SYNTHESIS',cls:'synthesis',msg:'Ranking insights by novelty × impact score...',type:'info'},
+   {agent:'SYNTHESIS',cls:'synthesis',msg:'Generating structured research summary report...'},
+   {agent:'SYSTEM',cls:'system',msg:'Pipeline complete. Report assembled successfully.',type:'success'}],
+];
+
+let running = false;
+let startTime = null;
+
+function setQ(v){ document.getElementById('q-input').value=v; }
+
+function stageClick(i, q){ if(confirm('Open details for Stage '+String(i+1)+'?\n\n"'+q+'"')){}  }
+function agentClick(q){ if(confirm(q+'\n\n(In a real session this would query Claude)')){ } }
+
+function ts(){
+  const s=Math.floor((Date.now()-startTime)/1000);
+  return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+
+function addLog(agent,cls,msg,type=''){
+  const panel=document.getElementById('log-panel');
+  const d=document.createElement('div');
+  d.className='log-line';
+  d.innerHTML=`<span class="log-ts">${ts()}</span><span class="log-agent-name ${cls}">${agent}</span><span class="log-text ${type}">${msg}</span>`;
+  panel.appendChild(d);
+  panel.scrollTop=panel.scrollHeight;
+}
+
+function setStageActive(i){
+  for(let k=0;k<5;k++) document.getElementById('sn-'+k).classList.remove('active');
+  document.getElementById('sn-'+i).classList.add('active');
+  let prog=document.getElementById('sp-'+i); prog.style.width='0%';
+  let p=0;
+  const iv=setInterval(()=>{ p=Math.min(p+7,93); prog.style.width=p+'%'; if(p>=93)clearInterval(iv); },100);
+}
+
+function setStagesDone(...ids){ ids.forEach(i=>{ document.getElementById('sn-'+i).classList.remove('active'); document.getElementById('sn-'+i).classList.add('done'); document.getElementById('sp-'+i).style.width='100%'; }); }
+
+function setArrowActive(i){ document.getElementById('arr-'+i).classList.add('arrow-active'); }
+
+function setAgentFiring(i){ document.getElementById('ag-'+i).classList.add('firing'); }
+function setAgentDone(i){ document.getElementById('ag-'+i).classList.remove('firing'); document.getElementById('ag-'+i).classList.add('done-agent'); }
+
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function startPipeline(){
+  if(running)return;
+  running=true; flowActive=true;
+  startTime=Date.now();
+  document.getElementById('run-btn').disabled=true;
+  document.getElementById('output-section').classList.remove('visible');
+  document.getElementById('log-panel').innerHTML='';
+
+  const q=(document.getElementById('q-input').value.trim()||Object.keys(PAPERS)[0]);
+
+  // Stage 0 + Agent 0
+  setStageActive(0); setAgentFiring(0);
+  addLog('SYSTEM','system','Query received: "'+q+'"','info');
+  for(const l of LOG_SEQUENCES[0]){ await delay(600); addLog(l.agent,l.cls,l.msg,l.type||''); }
+  setStagesDone(0); setArrowActive(0); setAgentDone(0);
+
+  // Stage 1-2 + Agent 1-2
+  await delay(250);
+  setStageActive(1); setAgentFiring(1);
+  for(const l of LOG_SEQUENCES[1]){ await delay(620); addLog(l.agent,l.cls,l.msg,l.type||''); }
+  setStagesDone(1); setArrowActive(1); setAgentDone(1); setStageActive(2); setAgentFiring(2);
+  for(const l of LOG_SEQUENCES[2]){ await delay(620); addLog(l.agent,l.cls,l.msg,l.type||''); }
+  setStagesDone(2); setArrowActive(2); setAgentDone(2);
+
+  // Stage 3-4 + Agent 3
+  await delay(250);
+  setStageActive(3); setStageActive(4); setAgentFiring(3);
+  for(const l of LOG_SEQUENCES[3]){ await delay(650); addLog(l.agent,l.cls,l.msg,l.type||''); }
+  setStagesDone(3,4); setArrowActive(3); setAgentDone(3);
+
+  // Show output
+  await delay(350);
+  showOutput(q);
+  running=false;
+}
+
+function showOutput(q){
+  const key=Object.keys(PAPERS).find(k=>q.toLowerCase().includes(k.split(' ')[0].toLowerCase()))||Object.keys(PAPERS)[0];
+  const papers=PAPERS[key];
+  const tagColors={p:'p',t:'t',a:'a'};
+
+  let html='';
+  papers.forEach((p,i)=>{
+    const tags=p.tags.map(t=>`<span class="ptag ${p.tc}">${t}</span>`).join('');
+    html+=`<div class="paper-card">
+      <div class="paper-rank">0${i+1}</div>
+      <div class="paper-body">
+        <div class="paper-title-text">${p.title}</div>
+        <div class="paper-meta">${p.authors} &nbsp;·&nbsp; ${p.venue} ${p.year}</div>
+        <div class="paper-tags">${tags}</div>
+      </div>
+      <div class="cite-badge"><span class="cite-num">${p.cite.toLocaleString()}</span>citations</div>
+    </div>`;
+  });
+  document.getElementById('papers-grid').innerHTML=html;
+
+  const elapsed=((Date.now()-startTime)/1000).toFixed(1);
+  document.getElementById('out-stat-papers').textContent=papers.length+' papers';
+  document.getElementById('out-stat-time').textContent=elapsed+'s';
+  document.getElementById('met-papers').textContent=papers.length;
+  document.getElementById('met-entities').textContent=Math.floor(90+Math.random()*100);
+  document.getElementById('met-time').textContent=elapsed+'s';
+  document.getElementById('output-section').classList.add('visible');
+}
+
+function resetPipeline(){
+  if(running)return;
+  flowActive=false; particles=[];
+  for(let i=0;i<5;i++){
+    const n=document.getElementById('sn-'+i);
+    n.classList.remove('active','done');
+    document.getElementById('sp-'+i).style.width='0%';
+  }
+  for(let i=0;i<4;i++){
+    const a=document.getElementById('arr-'+i);
+    if(a) a.classList.remove('arrow-active');
+  }
+  for(let i=0;i<4;i++){
+    document.getElementById('ag-'+i).classList.remove('firing','done-agent');
+  }
+  document.getElementById('log-panel').innerHTML='<div class="log-line"><span class="log-ts">00:00</span><span class="log-agent-name system">SYSTEM</span><span class="log-text info">Pipeline reset. Awaiting query.</span></div>';
+  document.getElementById('output-section').classList.remove('visible');
+  document.getElementById('run-btn').disabled=false;
+  startTime=null;
+}
+</script>
+</body>
+</html>
